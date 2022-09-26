@@ -1,4 +1,6 @@
 fakedatabase.json
+fakeDB.json
+*.ini
 node_modules/
 config.json
 *.swp
