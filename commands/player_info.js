@@ -1,7 +1,19 @@
-const { SlashCommandBuilder} = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const path = require('node:path');
 const { getPlayerById } = require(path.resolve('middleware/playerDBHandler.js'));
 const { Player } = require(path.resolve("model/player.js"));
+
+function getPlayerInfoEmbed(player){
+	return new EmbedBuilder()
+		.setColor(0xe6b800)
+		.setTitle(`${player.playerName}'s profile`)
+		//.setDescription('Some description here')
+		.addFields(
+			{ name: '\:coin:', value: `${player.coin}`, inline: true },
+			{ name: '\:hot_face:', value: `${player.rep}`, inline: true },
+		)
+		.setFooter({ text: 'Coin Blaster 欢乐爆金币' });
+}
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -22,6 +34,6 @@ module.exports = {
 		}
 		// print player info
 		
-		await interaction.reply(Player.info(player));
+		await interaction.reply({ embeds: [getPlayerInfoEmbed(player)] });
 	},
 };

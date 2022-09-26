@@ -6,18 +6,6 @@ class Player{
 		this.rep = 25;
 	}
 	
-	static getPlayerName(p){
-		return p.playerName;
-	}
-	
-	static getCoin(p){
-		return p.coin;
-	}
-	
-	static getRep(p){
-		return p.rep;
-	}
-	
 	static info(p){
 		return `${p.playerName} profile: \n\
 				\tcoin: ${p.coin}\n\
