@@ -1,14 +1,14 @@
 const { SlashCommandBuilder} = require('discord.js');
 const path = require('node:path');
-const { getPlayerById, setPlayer } = require(path.resolve('middleware/playerDBHandler.js'));
 const { Player } = require(path.resolve("model/player.js"));
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('register')
 		.setDescription("register to be a player"),
+		
 	async execute(interaction) {
-		let player = getPlayerById(interaction.user.id);
+		let player = Player.getPlayerById(interaction.user.id);
 		if(player){ // user id already in db
 			await interaction.reply(`${interaction.user.tag} has registered already`);
 			return;
@@ -28,7 +28,7 @@ module.exports = {
 			});
 		if(!playerName)
 			return;
-		setPlayer(new Player(interaction.user.id, playerName));
+		new Player(interaction.user.id, playerName);
 		interaction.followUp(`Hello ${playerName}, 欢乐爆金币！`);
 	},
 };

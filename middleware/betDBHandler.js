@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('node:path');
+const Bet = require(path.resolve("model/bet.js"));
 
-const dbName = "fakeDB.json";
+const dbName = "betDB.json";
 const dbPath = path.resolve(dbName);
 
 function checkJSONFile(){
@@ -11,20 +12,26 @@ function checkJSONFile(){
 	}
 }
 
-const getPlayerById = function(id){
+const getBetById = function(id){
 	checkJSONFile();
 	const data = require(dbPath);
 	if(!data) return undefined;
 	return data[id];
 };
 
-const setPlayer = function(player){
+const setBet = function(bet){
 	checkJSONFile();
 	const data = require(dbPath);
-	data[player.userId] = player;
+	data[bet.betId] = bet;
 	fs.writeFileSync(dbPath, JSON.stringify(data), err =>{
 		if(err) throw err;
 	});
 };
 
-module.exports = { getPlayerById, setPlayer }
+const getAllGames = function(){
+	checkJSONFile();
+	data = require(dbPath);
+	return data
+}
+
+module.exports = { getBetById, setBet, getAllGames }
