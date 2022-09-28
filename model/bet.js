@@ -1,11 +1,17 @@
 const path = require('node:path');
 const { Player } = require(path.resolve("model/player.js"));
-const { getBetById: getBetByIdFromDB, setBet, addBetToGame, getAllGames: getAllGamesFromDB } = require(path.resolve('middleware/betDBHandler.js'));
+const { 
+	getBetById: getBetByIdFromDB, 
+	setBet, 
+	addBetToGame, 
+	getAllGames: getAllGamesFromDB, 
+	removeGame 
+} = require(path.resolve('middleware/betDBHandler.js'));
 
 class Bet{
 	constructor(creatorId, opts, topic){
 		let d = new Date();
-		this.betId = d.getTime();
+		this.betId = d.getTime().toString();
 		this.creatorId = creatorId;
 		this.options = [];
 		opts.forEach((ele) => {
@@ -89,6 +95,35 @@ class Bet{
 	static getAllGames(){
 		return getAllGamesFromDB();
 	}
+	
+	// returns result as[{playerId, betAmount, reward, optIdx}]
+	static closeGame(gameId, winningOpt){
+		const game = getBetByIdFromDB(gameId);
+		const totalWinningAmt = game.options[winningOpt].optionBetAmount;
+		let resultList = [];
+		
+		game.bets.forEach(b => {
+			// bets = [{userId: optionIdx: amount:}]
+			let reward = 0;
+			
+			if(b.optionIdx == winningOpt){
+				reward = Math.round(b.amount / totalWinningAmt * game.totalBetAmount);
+				Player.earnCoins(b.userId, reward);
+			}
+			
+			resultList.push({
+				playerId: b.userId,
+				betAmount: b.amount,
+				reward: reward,
+				optIdx: b.optionIdx
+			});
+		});
+		// remove game
+		removeGame(gameId);
+		Player.removeBetGame(game.creatorId, gameId);
+		return resultList;
+	}
+	
 }
 
 module.exports = {

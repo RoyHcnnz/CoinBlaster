@@ -34,4 +34,13 @@ const getAllGames = function(){
 	return data
 }
 
-module.exports = { getBetById, setBet, getAllGames }
+const removeGame = function(id){
+	checkJSONFile();
+	const data = require(dbPath);
+	delete data[id];
+	fs.writeFileSync(dbPath, JSON.stringify(data), err =>{
+		if(err) throw err;
+	});
+}
+
+module.exports = { getBetById, setBet, getAllGames, removeGame }

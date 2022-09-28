@@ -64,6 +64,20 @@ class Player{
 		this.updatePlayer(player);
 	}
 	
+	static mention(playerId, message = ""){
+		p = getPlayerByIdFromDB(playerId);
+		return p.tostring + message;
+	}
+	
+	static removeBetGame(playerId, gameId){
+		let player = getPlayerByIdFromDB(playerId);
+		const idx = player.startedBet.indexOf(gameId);
+		if(idx > -1){	// if game id found
+			player.startedBet.splice(idx, 1);
+		}
+		setPlayer(player);
+	}
+	
 }
 
 module.exports = {

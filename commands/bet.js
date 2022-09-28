@@ -6,11 +6,11 @@ const path = require('node:path');
 //		check all file in bet_game folder and addSubcmd tp slashCmd
 // 2. create collection for execute 
 let slashCmd = new SlashCommandBuilder()
-		.setName('bet_game')
+		.setName('bet')
 		.setDescription("create or participate or view bet games");
 
 let subcmdCollection = new Collection();
-const subcommandsPath = path.resolve('commands/bet_game/');
+const subcommandsPath = path.resolve('commands/bet/');
 const subcommandFiles = fs.readdirSync(subcommandsPath).filter(file => file.endsWith('.js'));
 
 for (const subcmdfile of subcommandFiles) {
@@ -30,22 +30,3 @@ module.exports = {
 		await subcmd.execute(interaction);
 	},
 };
-
-/* origial design
-let slashCmd = new SlashCommandBuilder()
-		.setName('bet_game')
-		.setDescription("create or participate or view bet games")
-
-		.addSubcommand(subcommand => subcommand	// subcmd close_bet
-			.setName('close_bet')
-			.setDescription('close a bet game')
-			.addStringOption(option => option
-				.setName('game_id')
-				.setDescription('The id of the bet game you wanna close')
-				.setRequired(true))
-			.addStringOption(option => option
-				.setName('winningOption')
-				.setDescription('The index of the winning option')
-				.setRequired(true)))
-
-*/
