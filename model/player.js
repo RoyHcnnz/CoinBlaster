@@ -78,6 +78,43 @@ class Player{
 		setPlayer(player);
 	}
 	
+	static punchIn(playerId){
+		let reward = 20;
+		const date = new Date();
+		const y =  date.getYear();
+		const m =  date.getMonth();
+		const d =  date.getDay();
+		
+		const player = getPlayerById(playerId);
+		let lastDate = player.["punchInDate"];
+		if(!lastDate){
+			player.["punchInDate"] = { 
+				day: d,
+				month: m,
+				year: y
+			}
+			player.coin += reward;
+			setPlayer(player);
+			return reward;
+		}
+		let lastD = lastDate.day;
+		let lastM = lastDate.month;
+		let lastY = lastDate.year;
+		
+		if(y == lastY && m == lastM && d == lastD){
+			return 0;
+		}
+		
+		player.["punchInDate"] = { 
+			day: d,
+			month: m,
+			year: y
+		}
+		player.coin += reward;
+		setPlayer(player);
+		return reward;
+	}
+	
 }
 
 module.exports = {
