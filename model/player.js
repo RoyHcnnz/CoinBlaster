@@ -85,10 +85,10 @@ class Player{
 		const m =  date.getMonth();
 		const d =  date.getDay();
 		
-		const player = getPlayerById(playerId);
-		let lastDate = player.["punchInDate"];
+		const player = Player.getPlayerById(playerId);
+		let lastDate = player["punchInDate"];
 		if(!lastDate){
-			player.["punchInDate"] = { 
+			player["punchInDate"] = { 
 				day: d,
 				month: m,
 				year: y
@@ -105,7 +105,7 @@ class Player{
 			return 0;
 		}
 		
-		player.["punchInDate"] = { 
+		player["punchInDate"] = { 
 			day: d,
 			month: m,
 			year: y
