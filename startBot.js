@@ -49,17 +49,18 @@ client.on('interactionCreate', async interaction => {
 
 client.on('messageCreate', msg => {
 	const player = Player.getPlayerById(msg.author.id);
-	if(!player){
-		msg.channel.send("You have not registered yet. Please /register first!");
-		return;
-	}
-	
+
 	if( (msg.channel.id == "968856957907775538" || msg.channel.id == "968858315935322162") 
 			&& (msg.content.startsWith("打卡"))){
+		if(!player){
+			msg.channel.send("You have not registered yet. Please /register first!");
+			return;
+		}
 		const reward = Player.punchIn(msg.author.id);
 		if (reward > 0){
 			// punch in success
 			msg.channel.send("<@"+msg.author.id+"> just received " + reward + " coins for the hardworking! ( ˶º̬˶ )୨⚑");
+			msg.react(":hl_good:");
 		}else{
 			msg.channel.send("<@"+msg.author.id+"> You has already punched in today so no coins until tomorrow. Well done for more of your hardwork tho.");
 		}
