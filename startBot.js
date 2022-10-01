@@ -60,7 +60,7 @@ client.on('messageCreate', msg => {
 		if (reward > 0){
 			// punch in success
 			msg.channel.send("<@"+msg.author.id+"> just received " + reward + " coins for the hardworking! ( ˶º̬˶ )୨⚑");
-			msg.react(":thumbsup:");
+			msg.react(client.emojis.get("980793051997937674"));
 		}else{
 			msg.channel.send("<@"+msg.author.id+"> You has already punched in today so no coins until tomorrow. Well done for more of your hardwork tho.");
 		}
