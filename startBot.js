@@ -48,6 +48,12 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.on('messageCreate', msg => {
+	const player = Player.getPlayerById(msg.author.id);
+	if(!player){
+		msg.channel.send("You have not registered yet. Please /register first!");
+		return;
+	}
+	
 	if( (msg.channel.id == "968856957907775538" || msg.channel.id == "968858315935322162") 
 			&& (msg.content.startsWith("打卡"))){
 		const reward = Player.punchIn(msg.author.id);
