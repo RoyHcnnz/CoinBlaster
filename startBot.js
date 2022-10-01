@@ -38,7 +38,14 @@ client.on('interactionCreate', async interaction => {
 	const command = interaction.client.commands.get(interaction.commandName);
 
 	if (!command) return;
-
+	
+	if(interaction.commandName != "register"){
+	const player = Player.getPlayerById(interaction.user.id);
+		if(!player){
+			msg.channel.send("You have not registered yet. Please /register first!");
+			return;
+		}
+	}
 	try{
 		await command.execute(interaction);
 	}catch(error){
@@ -48,10 +55,9 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.on('messageCreate', msg => {
-	const player = Player.getPlayerById(msg.author.id);
-
 	if( (msg.channel.id == "968856957907775538" || msg.channel.id == "968858315935322162") 
 			&& (msg.content.startsWith("打卡"))){
+		const player = Player.getPlayerById(msg.author.id);
 		if(!player){
 			msg.channel.send("You have not registered yet. Please /register first!");
 			return;
@@ -62,7 +68,7 @@ client.on('messageCreate', msg => {
 			msg.channel.send("<@"+msg.author.id+"> just received " + reward + " coins for the hardworking! ( ˶º̬˶ )୨⚑");
 			msg.react("<:hl_good:980793051997937674>");
 		}else{
-			msg.channel.send("<@"+msg.author.id+"> You has already punched in today so no coins until tomorrow. Well done for more of your hardwork tho.");
+			msg.channel.send("<@"+msg.author.id+"> You have already punched in today so no coins until tomorrow. Well done for more of your hardwork tho.");
 		}
 	}
 });

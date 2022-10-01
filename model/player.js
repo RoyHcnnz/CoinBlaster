@@ -37,7 +37,7 @@ class Player{
 			//.setDescription('Some description here')
 			.addFields(
 				{ name: '\:coin:', value: `${player.coin}`, inline: true },
-				{ name: '\:hot_face:', value: `${player.rep}`, inline: true },
+				{ name: '\:crown:', value: `${player.rep}`, inline: true },
 			)
 			.setFooter({ text: 'Coin Blaster 欢乐爆金币' });
 	}
@@ -78,6 +78,8 @@ class Player{
 		setPlayer(player);
 	}
 	
+	// return reward if punch in succ
+	// return 0 (no reward) if failed
 	static punchIn(playerId){
 		let reward = 20;
 		const date = new Date();
@@ -115,6 +117,27 @@ class Player{
 		return reward;
 	}
 	
+	static checkPunchInToday(playerId){
+		const date = new Date();
+		const y =  date.getYear();
+		const m =  date.getMonth();
+		const d =  date.getDay();
+		
+		const player = Player.getPlayerById(playerId);
+		let lastDate = player["punchInDate"];
+		if(!lastDate){
+			return false;
+		}
+		let lastD = lastDate.day;
+		let lastM = lastDate.month;
+		let lastY = lastDate.year;
+		
+		if(y == lastY && m == lastM && d == lastD){
+			return true;
+		}else{
+			return false;
+		}
+	}
 }
 
 module.exports = {
