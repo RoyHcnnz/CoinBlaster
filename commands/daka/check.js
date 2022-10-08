@@ -19,7 +19,7 @@ module.exports = {
 		if(Player.checkPunchInToday(playerId)){
 			interaction.reply(`<@${playerId}> has already done some good job today.`);
 		}else{
-			interaction.reply(`<@${playerId}> has been lazy today. <@${interaction.user}> is watching you :eyes:`);
+			interaction.reply(`<@${playerId}> has been lazy today. ${interaction.user} is watching you :eyes:`);
 		}
 		
 	},
