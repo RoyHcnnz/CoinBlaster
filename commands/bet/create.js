@@ -1,9 +1,6 @@
 const { SlashCommandSubcommandBuilder } = require('discord.js');
 const path = require('node:path');
-const { Bet } = require(path.resolve("model/bet.js"));
-const { Player } = require(path.resolve("model/player.js"));
-const { setBet } = require(path.resolve('middleware/betDBHandler.js'));
-const { getPlayerById, setPlayer } = require(path.resolve('middleware/playerDBHandler.js'));
+const Bet = require(path.resolve("model/bet.js"));
 
 module.exports = {
 	subcmd: new SlashCommandSubcommandBuilder()
@@ -35,16 +32,21 @@ module.exports = {
 		// Create new bet game
 		let betTopic = interaction.options.getString("topic");
 		let opts = [];
-		for(let i=1; i<=5; i++) {
-			let optText = interaction.options.getString("option"+i);
-			if(optText)
-				opts.push(optText);
+		for (let i = 1; i <= 5; i++) {
+			let optText = interaction.options.getString("option" + i);
+			if (optText)
+				opts.push({ optionName: optText });
 		}
 		let creatorId = interaction.user.id;
-		
-		const newGame = new Bet(creatorId, opts, betTopic);
-		
-		let betInfoEmbed = Bet.getBetInfoEmbed(newGame.betId);
+
+		const newGame = new Bet({
+			creatorId: creatorId,
+			options: opts,
+			topic: betTopic,
+		})
+		await newGame.save();
+
+		let betInfoEmbed = newGame.getBetInfoEmbed(newGame.betId);
 		await interaction.reply({ embeds: [betInfoEmbed] });
 	},
 };

@@ -1,131 +1,138 @@
+const mongoose = require('mongoose');
 const path = require('node:path');
-const { Player } = require(path.resolve("model/player.js"));
-const { 
-	getBetById: getBetByIdFromDB, 
-	setBet, 
-	addBetToGame, 
-	getAllGames: getAllGamesFromDB, 
-	removeGame 
-} = require(path.resolve('middleware/betDBHandler.js'));
+const Player = require(path.resolve("model/player.js"));
 
-class Bet{
-	constructor(creatorId, opts, topic){
-		let d = new Date();
-		this.betId = d.getTime().toString();
-		this.creatorId = creatorId;
-		this.options = [];
-		opts.forEach((ele) => {
-			this.options.push({optionName: ele, optionBetAmount: 0});
-		});
-		this.topic = topic;
-		this.bets = []; // userId: optionIdx: amount: 
-		this.totalBetAmount = 0;
-		setBet(this);
-		
-		// add game id to creator's profile
-		let creator = Player.getPlayerById(creatorId);
-		creator.startedBet.push(this.betId);
-		Player.updatePlayer(creator);
-	}
-	
-	static getBetById(id){
-		return getBetByIdFromDB(id);
-	}
-	
-	static getBetInfoEmbed(betId){
-		const game = this.getBetById(betId);
+const Schema = mongoose.Schema;
+
+const betSchema = new Schema({
+	_id: Number,
+	creatorId: { type: String, ref: 'Player' },
+	options: [{ optionName: String, optionBetAmount: Number }],
+	topic: String,
+	bets: [{
+		playerId: { type: String, ref: 'Player' },
+		optionIdx: Number,
+		amount: { type: Number, default: 0 }
+	}],
+	totalBetAmount: { type: Number, default: 0 },
+}, { _id: false });
+
+betSchema.methods = {
+	getBetInfoEmbed: function () {
 		let optionDetails = [];
-		game.options.forEach((ele, idx) => {
-			let oddsStr = "odds: " + game.totalBetAmount + "/" + ele.optionBetAmount;
-			if(ele.optionBetAmount >0 ){
-				const num = game.totalBetAmount / ele.optionBetAmount;
+		this.options.forEach((ele, idx) => {
+			let oddsStr = "odds: " + this.totalBetAmount + "/" + ele.optionBetAmount;
+			if (ele.optionBetAmount > 0) {
+				const num = this.totalBetAmount / ele.optionBetAmount;
 				// round at most two decimal places
-				oddsStr += " = " + (Math.round(num * 100) / 100);	
+				oddsStr += " = " + (Math.round(num * 100) / 100);
 			}
-			optionDetails.push( {
-				name: (idx+1) + ": " + ele.optionName,
-				value: oddsStr 
-			} )
+			optionDetails.push({
+				name: (idx + 1) + ": " + ele.optionName,
+				value: oddsStr
+			})
 		})
-		const embed ={
+		const embed = {
 			color: 0xe6b800,
-			title: game.topic,
-			description: "bet game id: " + game.betId,
+			title: this.topic,
+			description: "bet game id: " + this._id,
 			fields: optionDetails,
 			footer: { text: 'Coin Blaster 欢乐爆金币' }
 		}
 		return embed;
-	}
-	
-	static upsertBet(bet){
-		setBet(bet);
-	}
-	
-	static addBetToGame(betId, userId, optionIdx, amount){
-		let game = this.getBetById(betId);
-		if(!game)
-			throw 'Game id not found';
-		if(optionIdx > game.options.length)
+	},
+
+	// update player's coin
+	// will throw no such option or no enough coins
+	addBetToGame: async function (userId, optionIdx, amount) {
+		if (optionIdx > this.options.length)
 			throw 'No such option';
-		
+
+		let player = await Player.findById(userId);
 		// try cost player coin
-		Player.spendCoins(userId, amount);
-		
+		player.spendCoins(amount);
+		player.save();
+
 		// add bet entry
-		const resultIdx = game.bets.findIndex(
-			b => userId === b.userId && optionIdx === b.optionIdx
+		const resultIdx = this.bets.findIndex(
+			b => userId === b.playerId && optionIdx === b.optionIdx
 		);
-		if(resultIdx === -1){ // not found such bet
-			game.bets.push({
-				userId: userId,
+		if (resultIdx === -1) { // not found such bet
+			this.bets.push({
+				playerId: userId,
 				optionIdx: optionIdx,
 				amount: amount
 			});
-		}else{
-			game.bets[resultIdx].amount += amount;
+		} else {
+			this.bets[resultIdx].amount += amount;
 		}
 		// update option amount 
-		game.options[optionIdx].optionBetAmount += amount;
+		this.options[optionIdx].optionBetAmount += amount;
 		// update total amount
-		game.totalBetAmount += amount;
-		// update game
-		this.upsertBet(game);
-	}
-	
-	static getAllGames(){
-		return getAllGamesFromDB();
-	}
-	
-	// returns result as[{playerId, betAmount, reward, optIdx}]
-	static closeGame(gameId, winningOpt){
-		const game = getBetByIdFromDB(gameId);
-		const totalWinningAmt = game.options[winningOpt].optionBetAmount;
+		this.totalBetAmount += amount;
+	},
+
+	// returns result as[{playerId, betAmount, reward, optStr}]
+	// will give winner's reward
+	closeGame: async function (winningOpt) {
+		const totalWinningAmt = this.options[winningOpt].optionBetAmount;
 		let resultList = [];
-		
-		game.bets.forEach(b => {
-			// bets = [{userId: optionIdx: amount:}]
+
+		for (const b of this.bets) {
+			// bets: [playerId: optionIdx: amount: ]
 			let reward = 0;
-			
-			if(b.optionIdx == winningOpt){
-				reward = Math.round(b.amount / totalWinningAmt * game.totalBetAmount);
-				Player.earnCoins(b.userId, reward);
+
+			if (b.optionIdx == winningOpt) {
+				reward = Math.round(b.amount / totalWinningAmt * this.totalBetAmount);
+				let player = await Player.findById(b.playerId);
+				player.earnCoins(reward);
+				player.save();
 			}
-			
+
 			resultList.push({
-				playerId: b.userId,
+				playerId: b.playerId,
 				betAmount: b.amount,
 				reward: reward,
-				optIdx: b.optionIdx
+				optStr: this.options[b.optionIdx].optionName
 			});
-		});
+		};
 		// remove game
-		removeGame(gameId);
-		Player.removeBetGame(game.creatorId, gameId);
+		this.remove();
+		let creator = await Player.findById(this.creatorId);
+		creator.removeBetGame(this._id);
+		creator.save();
 		return resultList;
 	}
-	
-}
+};
 
-module.exports = {
-    Bet
-}
+betSchema.statics = {
+
+	getTopic: async function (id) {
+		const g = await this.findById(id);
+		return g.topic;
+	}
+};
+
+betSchema.pre('save', async function (next) {
+	if (this.isNew) {
+		let id = Math.floor(Math.random() * 89) + 10;
+		let betCheck = await betModel.findById(id);
+		while (betCheck) {
+			id = Math.floor(Math.random() * 89) + 10;
+			betCheck = await betModel.findById(id);
+		}
+		this._id = id;
+		this.options.forEach((ele) => {
+			ele.optionBetAmount = 0;
+		});
+		this.bets = [];
+
+		let player = await Player.findById(this.creatorId);
+		player.startedBet.push(this._id);
+		player.save();
+	}
+	next();
+});
+
+const betModel = mongoose.model("Bet", betSchema);
+module.exports = betModel;

@@ -1,6 +1,6 @@
 const { SlashCommandSubcommandBuilder } = require('discord.js');
 const path = require('node:path');
-const { Bet } = require(path.resolve("model/bet.js"));
+const Bet = require(path.resolve("model/bet.js"));
 
 module.exports = {
 	subcmd: new SlashCommandSubcommandBuilder()
@@ -13,9 +13,9 @@ module.exports = {
 
 	async execute(interaction) {
 		const betId = interaction.options.getString("game_id");
-		
-		let betInfoEmbed = Bet.getBetInfoEmbed(betId);
+
+		const game = await Bet.findById(betId);
+		const betInfoEmbed = game.getBetInfoEmbed();
 		await interaction.reply({ embeds: [betInfoEmbed] });
-		
 	},
 };

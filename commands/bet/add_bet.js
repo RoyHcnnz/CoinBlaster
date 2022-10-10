@@ -1,7 +1,7 @@
 const { SlashCommandSubcommandBuilder } = require('discord.js');
 const path = require('node:path');
-const { Bet } = require(path.resolve("model/bet.js"));
-const { Player } = require(path.resolve("model/player.js"));
+const Bet = require(path.resolve("model/bet.js"));
+const Player = require(path.resolve("model/player.js"));
 
 module.exports = {
 	subcmd: new SlashCommandSubcommandBuilder()
@@ -24,37 +24,39 @@ module.exports = {
 		const gameId = interaction.options.getString("gameid");
 		const betOptIdx = interaction.options.getInteger("option") - 1;
 		const betAmount = interaction.options.getInteger("amount");
-		
-		if(betAmount < 0){
+
+		if (betAmount < 0) {
+			const pName = await Player.getName(interaction.user.id);
 			await interaction.reply({
-				content: "Nice try " + Player.getName(interaction.user.id) + ", nice try.", 
+				content: "Nice try " + pName + ", nice try.",
 			});
 			return;
 		}
-		
-		if(betAmount === 0){
+
+		if (betAmount === 0) {
 			await interaction.reply({
-				content: "穷逼滚粗！", 
+				content: "穷逼滚粗！",
 			});
 			return;
 		}
-		
-		try{
-			Bet.addBetToGame(gameId, interaction.user.id, betOptIdx, betAmount);
-		}catch(e){
+
+		let game = await Bet.findById(gameId);
+		try {
+			await game.addBetToGame(interaction.user.id, betOptIdx, betAmount);
+		} catch (e) {
 			await interaction.reply({
-				content: "Error: " + e, 
+				content: "Error: " + e,
 				ephemeral: true
 			});
 			return;
 		}
-		
+		await game.save();
 		// reply 
-		const game = Bet.getBetById(gameId);
 		const betOptString = game.options[betOptIdx].optionName;
 		await interaction.reply({
-			content: "Successfully bet " + betAmount + " coins on " + betOptString + " regarding on " + game.topic + " \nGood Luck", 
-			ephemeral: true
+			content: `<@${interaction.user.id}>` + " successfully bet "
+				+ betAmount + " coins on " + betOptString + " regarding on "
+				+ game.topic + " \nGood Luck"
 		});
 	},
 };

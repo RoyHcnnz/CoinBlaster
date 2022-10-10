@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const path = require('node:path');
-const { Player } = require(path.resolve("model/player.js"));
+const Player = require(path.resolve("model/player.js"));
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -13,7 +13,7 @@ module.exports = {
 		),
 	async execute(interaction) {
 		let targetUser = interaction.options.getUser('player');
-		
-		await interaction.reply({ embeds: [Player.getPlayerInfoEmbed(targetUser.id)] });
+		const player = await Player.findById(targetUser.id);
+		await interaction.reply({ embeds: [player.getPlayerInfoEmbed()] });
 	},
 };

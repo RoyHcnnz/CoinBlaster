@@ -1,6 +1,6 @@
 const { SlashCommandSubcommandBuilder } = require('discord.js');
 const path = require('node:path');
-const { Player } = require(path.resolve("model/player.js"));
+const Player = require(path.resolve("model/player.js"));
 
 module.exports = {
 	subcmd: new SlashCommandSubcommandBuilder()
@@ -13,14 +13,15 @@ module.exports = {
 
 	async execute(interaction) {
 		const playerId = interaction.options.getUser("target").id;
-		if(!Player.getPlayerById(playerId)){
+		const player = await Player.findById(playerId);
+		if (!player) {
 			interaction.reply(`The user you are checking has not registered yet.`);
 		}
-		if(Player.checkPunchInToday(playerId)){
-			interaction.reply(`<@${playerId}> has already done some good job today.`);
-		}else{
+		if (player.checkPunchInToday()) {
+			interaction.reply(`<@${playerId}> has already done a good job today.`);
+		} else {
 			interaction.reply(`<@${playerId}> has been lazy today. ${interaction.user} is watching you :eyes:`);
 		}
-		
+
 	},
 };

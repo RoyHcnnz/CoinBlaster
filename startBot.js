@@ -1,16 +1,19 @@
 // Require the necessary discord.js classes
 const fs = require('node:fs');
+const mongoose = require('mongoose');
 const path = require('node:path');
-const { Player } = require(path.resolve("model/player.js"));
+const Player = require(path.resolve("./model/player.js"));
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { token } = require(path.resolve('config.json'));
+const { token, mangodbUsername, mangodbPassword, dbname, dbClusterURL }
+	= require(path.resolve('config.json'));
 
 // Create a new client instance
-const client = new Client({ intents: [
+const client = new Client({
+	intents: [
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.MessageContent
-	] 
+	]
 });
 
 // load cmds
@@ -34,44 +37,57 @@ client.once('ready', () => {
 // Commands reply
 client.on('interactionCreate', async interaction => {
 	if (!interaction.isChatInputCommand()) return;
-	
+
 	const command = interaction.client.commands.get(interaction.commandName);
 
 	if (!command) return;
-	
-	if(interaction.commandName != "register"){
-	const player = Player.getPlayerById(interaction.user.id);
-		if(!player){
+
+	if (interaction.commandName != "register") {
+		const player = await Player.findById(interaction.user.id);
+		if (!player) {
 			msg.channel.send("You have not registered yet. Please /register first!");
 			return;
 		}
 	}
-	try{
+	try {
 		await command.execute(interaction);
-	}catch(error){
+	} catch (error) {
 		console.error(error);
 		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 	}
 });
 
-client.on('messageCreate', msg => {
-	if( (msg.channel.id == "968856957907775538" || msg.channel.id == "968858315935322162") 
-			&& (msg.content.startsWith("打卡"))){
-		const player = Player.getPlayerById(msg.author.id);
-		if(!player){
+client.on('messageCreate', async msg => {
+	if ((msg.channel.id == "968856957907775538" || msg.channel.id == "968858315935322162")
+		&& (msg.content.startsWith("打卡"))) {
+		const player = await Player.findById(msg.author.id);
+		if (!player) {
 			msg.channel.send("You have not registered yet. Please /register first!");
 			return;
 		}
-		const reward = Player.punchIn(msg.author.id);
-		if (reward > 0){
+		const reward = player.punchIn();
+		player.save();
+		if (reward > 0) {
 			// punch in success
-			msg.channel.send("<@"+msg.author.id+"> just received " + reward + " coins for the hardworking! ( ˶º̬˶ )୨⚑");
+			msg.channel.send("<@" + msg.author.id + "> just received " + reward + " coins for the hardworking! ( ˶º̬˶ )୨⚑");
 			msg.react("<:hl_good:980793051997937674>");
-		}else{
-			msg.channel.send("<@"+msg.author.id+"> You have already punched in today so no coins until tomorrow. Well done for more of your hardwork tho.");
+		} else {
+			msg.channel.send("<@" + msg.author.id + "> You have already punched in today so no coins until tomorrow. Well done for more of your hardwork tho.");
 		}
 	}
 });
 
-// Login to Discord with your client's token
-client.login(token);
+async function main() {
+
+	const uri = `mongodb+srv://${mangodbUsername}:${mangodbPassword}`
+		+ `@${dbClusterURL}/?retryWrites=true&w=majority`;
+
+	// Connect to the MongoDB cluster
+	await mongoose.connect(uri);
+
+	// Login to Discord with your client's token
+	client.login(token);
+}
+
+main().catch(console.error);
+

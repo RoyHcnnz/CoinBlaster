@@ -1,7 +1,6 @@
 const { SlashCommandSubcommandBuilder, userMention } = require('discord.js');
 const path = require('node:path');
-const { Bet } = require(path.resolve("model/bet.js"));
-const { Player } = require(path.resolve("model/player.js"));
+const Bet = require(path.resolve("model/bet.js"));
 
 module.exports = {
 	subcmd: new SlashCommandSubcommandBuilder()
@@ -19,37 +18,34 @@ module.exports = {
 	async execute(interaction) {
 		const gameId = interaction.options.getString("game_id");
 		const winningOpt = interaction.options.getInteger("winning_option") - 1;
-		
-		const game = Bet.getBetById(gameId);
-		if(game.creatorId != interaction.user.id){
+
+		const game = await Bet.findById(gameId);
+		if (game.creatorId != interaction.user.id) {
 			await interaction.reply({
-				content: "Error: Only the creator of the bet game can close the game.", 
+				content: "Error: Only the creator of the bet game can close the game.",
 				ephemeral: true
 			});
 			return;
 		}
-		
+
 		const gameTopic = game.topic;
-		const winningOptStr = game.options[winningOpt].optionName;
-		const winnerList = Bet.closeGame(gameId, winningOpt);
+		//const winningOptStr = game.options[winningOpt].optionName;
+		const winnerList = await game.closeGame(winningOpt);
 		await interaction.reply({
 			content: "Game Closed."
 		});
-		// [{playerId, betAmount, reward, optIdx}]
+		// [{playerId, betAmount, reward, optStr}]
 		winnerList.forEach(res => {
-			// const p = Player.getPlayerById(res.playerId);
-			
-			//let message = p.toString();
-			let message = userMention(res.playerId);
-			if(res.optIdx === winningOpt){
+			let message = `<@${res.playerId}>`;
+			if (res.reward > 0) {
 				message += ` won ${res.reward} `;
-			}else{
+			} else {
 				message += ` lost ${res.betAmount} `;
 			}
-			message += `for betting ${res.betAmount} coins on ${winningOptStr} in the game ${gameTopic}.`;
+			message += `for betting ${res.betAmount} coins on ${res.optStr} in the game ${gameTopic}.`;
 			interaction.followUp(message);
 		})
-		
+
 		/*
 		await interaction.reply({
 			content: "Successfully bet " + betAmount + " coins on " + betOptString + " regarding on " + game.topic + " \nGood Luck", 
