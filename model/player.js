@@ -16,7 +16,9 @@ const playerSchema = new Schema({
 	},
 
 	startedBet: [{ type: Number, ref: 'Bet' }],
-	punchInDate: Date
+	punchInDate: Date,
+	haveSpokenToday: { type: Boolean, default: true },
+	msgSent: { type: Number, default: 0 }
 }, { _id: false });
 
 playerSchema.methods = {

@@ -5,3 +5,4 @@ betDB.json
 node_modules/
 config.json
 *.swp
+removed/
