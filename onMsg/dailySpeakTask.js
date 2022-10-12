@@ -5,17 +5,20 @@ const daily = async function (msg) {
     let player = await Player.findById(msg.author.id);
     if (!player) return;
     if (!player.haveSpokenToday) {
-        player.earnCoins(50);
+        const dailyCoinRe = 50;
+        player.earnCoins(dailyCoinRe);
         player.haveSpokenToday = true;
-        msg.channel.send("<@" + msg.author.id + "> speak for the first time "
-            + "today, here is your daily award!");
+        msg.channel.send(`<@${msg.author.id}> speak for the first time
+            today, here is your daily reward!\n(+ ${dailyCoinRe} coins)`);
     }
     player.msgSent = player.msgSent + 1;
-    while (player.msgSent >= 150) {
-        player.msgSent = player.msgSent - 150;
-        player.earnCoins(10);
-        msg.channel.send("<@" + msg.author.id + "> has sent 150 messages! "
-            + "Here's some gifts for you!");
+    const msgRewardThreshold = 200;
+    const msgCoinReward = 20;
+    while (player.msgSent >= msgRewardThreshold) {
+        player.msgSent = player.msgSent - msgRewardThreshold;
+        player.earnCoins(msgCoinReward);
+        msg.channel.send(`<@${msg.author.id}> has sent ${msgRewardThreshold} 
+            messages! Here's some gifts for you!\n(+ ${msgCoinReward} coins)`);
     }
     player.save();
 }
