@@ -26,6 +26,7 @@ const constructLotteryDrawCRON = function (ch) {
             Lottery.setNextDate(tomorrow);
 
         },
+        timeZone: 'America/Los_Angeles',
         context: { channel: ch }
     });
 };

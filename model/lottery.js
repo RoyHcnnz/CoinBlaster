@@ -106,8 +106,9 @@ lotterySchema.methods = {
             } while (winningTicket.includes(n));
             winningTicket.push(n);
         }
-
+        winningTicket.sort();
         // winningTicket = [71, 77, 89];
+
         // redeem every ticket
         const mapIterator = this.tickets[Symbol.iterator]();
         for (const item of mapIterator) {
