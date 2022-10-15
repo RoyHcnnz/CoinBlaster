@@ -1,5 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
 const mongoose = require('mongoose');
+const path = require('node:path');
+const { isToday, isYesterday } = require(path.resolve("utils/dateOp.js"));
+const { randn_bm: rand, randomIntRange }
+	= require(path.resolve("utils/randomNumber.js"));
 
 const Schema = mongoose.Schema;
 
@@ -17,8 +21,13 @@ const playerSchema = new Schema({
 
 	startedBet: [{ type: Number, ref: 'Bet' }],
 	punchInDate: Date,
+	punchInCombo: { type: Number, default: 0 },
 	haveSpokenToday: { type: Boolean, default: true },
-	msgSent: { type: Number, default: 0 }
+	msgSent: { type: Number, default: 0 },
+	lotteryTicket: [{
+		ticket: [Number],
+		multiplier: Number
+	}]
 }, { _id: false });
 
 playerSchema.methods = {
@@ -44,6 +53,10 @@ playerSchema.methods = {
 		this.coin += amount;
 	},
 
+	earnRep: function (amount) {
+		this.rep += amount;
+	},
+
 	removeBetGame: function (gameId) {
 		const idx = this.startedBet.indexOf(gameId);
 		if (idx > -1) {	// if game id found
@@ -54,27 +67,28 @@ playerSchema.methods = {
 	// return reward if punch in succ
 	// return 0 (no reward) if failed
 	punchIn: function () {
-		const reward = 20;
-		const date = new Date();
-		const y = date.getYear();
-		const m = date.getMonth();
-		const d = date.getDay();
+		const reward = Math.round(rand(0, 40));
 
 		const lastDate = this.punchInDate;
 		if (!lastDate) {	// punch in 
-			this.punchInDate = date;
+			this.punchInDate = new Date();
 			this.coin += reward;
+			this.punchInCombo = 1;
 			return reward;
 		}
-		const lastD = lastDate.getDay();
-		const lastM = lastDate.getMonth();
-		const lastY = lastDate.getYear();
 
-		if (y == lastY && m == lastM && d == lastD) {
+		if (isToday(lastDate)) {
 			return 0;
 		}
 
-		this.punchInDate = date;
+		if (isYesterday(lastDate)) {
+			this.punchInCombo += 1;
+		} else {
+			this.punchInCombo = 1;
+		}
+
+
+		this.punchInDate = new Date();
 		this.coin += reward;
 		return reward;
 	},
@@ -84,21 +98,11 @@ playerSchema.methods = {
 		if (!lastDate) {
 			return false;
 		}
-		let lastD = lastDate.getDay();
-		let lastM = lastDate.getMonth();
-		let lastY = lastDate.getYear();
 
-		const date = new Date();
-		const y = date.getYear();
-		const m = date.getMonth();
-		const d = date.getDay();
+		return isToday(lastDate);
+	},
 
-		if (y == lastY && m == lastM && d == lastD) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+
 };
 
 playerSchema.statics = {

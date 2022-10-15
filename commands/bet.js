@@ -6,8 +6,8 @@ const path = require('node:path');
 //		check all file in bet_game folder and addSubcmd tp slashCmd
 // 2. create collection for execute 
 let slashCmd = new SlashCommandBuilder()
-		.setName('bet')
-		.setDescription("create or participate or view bet games");
+	.setName('bet')
+	.setDescription("create or participate or view bet games");
 
 let subcmdCollection = new Collection();
 const subcommandsPath = path.resolve('commands/bet/');
@@ -22,7 +22,7 @@ for (const subcmdfile of subcommandFiles) {
 }
 
 module.exports = {
-	data: slashCmd ,
+	data: slashCmd,
 
 	async execute(interaction) {
 		let subcmdName = interaction.options.getSubcommand();

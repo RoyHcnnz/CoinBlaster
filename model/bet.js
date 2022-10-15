@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const path = require('node:path');
 const Player = require(path.resolve("model/player.js"));
+const { randomIntRange } = require(path.resolve("utils/randomNumber.js"));
 
 const Schema = mongoose.Schema;
 
@@ -51,6 +52,7 @@ betSchema.methods = {
 		let player = await Player.findById(userId);
 		// try cost player coin
 		player.spendCoins(amount);
+		player.earnRep(-5);
 		player.save();
 
 		// add bet entry
@@ -115,12 +117,12 @@ betSchema.statics = {
 
 betSchema.pre('save', async function (next) {
 	if (this.isNew) {
-		let id = Math.floor(Math.random() * 89) + 10;
-		let betCheck = await betModel.findById(id);
-		while (betCheck) {
-			id = Math.floor(Math.random() * 89) + 10;
+		let id;
+		let betCheck;
+		do {
+			id = randomIntRange(10, 99);
 			betCheck = await betModel.findById(id);
-		}
+		} while (betCheck)
 		this._id = id;
 		this.options.forEach((ele) => {
 			ele.optionBetAmount = 0;
@@ -129,6 +131,7 @@ betSchema.pre('save', async function (next) {
 
 		let player = await Player.findById(this.creatorId);
 		player.startedBet.push(this._id);
+		player.earnRep(-10);
 		player.save();
 	}
 	next();

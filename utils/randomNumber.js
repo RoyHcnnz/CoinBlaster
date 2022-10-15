@@ -18,4 +18,8 @@ function randn_bm(min, max, skew = 1) {
     return num
 }
 
-module.exports = randn_bm;
+function randomIntRange(small, big) {
+    return Math.floor(Math.random() * (big - small + 1)) + small;
+}
+
+module.exports = { randn_bm, randomIntRange };

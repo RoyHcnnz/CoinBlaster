@@ -1,8 +1,6 @@
-fakedatabase.json
-fakeDB.json
-betDB.json
 *.ini
 node_modules/
+test/
 config.json
 *.swp
 removed/
