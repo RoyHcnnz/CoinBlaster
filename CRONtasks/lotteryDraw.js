@@ -22,7 +22,7 @@ const constructLotteryDrawCRON = function (ch) {
             // update next date
             let tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            tomorrow.setHours(13, 00, 00);
+            tomorrow.setHours(20, 00, 00);  // LA 13pm = UTC 20pm
             Lottery.setNextDate(tomorrow);
 
         },
